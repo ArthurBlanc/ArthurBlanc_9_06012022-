@@ -1,11 +1,14 @@
 import { screen } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import BillsUI from "../views/BillsUI.js";
+import Bills from "../containers/Bills.js";
+import { ROUTES } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import store from "../__mocks__/store";
 import { bills } from "../fixtures/bills";
 
 describe("Given I am connected as an Employee", () => {
-	// Test for billsUI.js
+	// Test for BillsUI.js
 	describe("When I am on Bills page, there are a bill icon in vertical layout", () => {
 		test("Then, the icon should be highlighted", () => {
 			Object.defineProperty(window, "localStorage", { value: localStorageMock });
@@ -86,6 +89,15 @@ describe("Given I am connected as an Employee", () => {
 				expect(dates).toEqual(datesSorted);
 			});
 		});
+		describe("When I am on Bills page, and there are no bills", () => {
+			test("Then, no bills should be shown", () => {
+				const html = BillsUI({ data: [] });
+				document.body.innerHTML = html;
+
+				const bill = screen.queryByTestId("bill");
+				expect(bill).toBeNull();
+			});
+		});
 		describe("When I am on Bills page, but it is loading", () => {
 			test("Then, Loading page should be rendered", () => {
 				const html = BillsUI({ loading: true });
@@ -99,6 +111,79 @@ describe("Given I am connected as an Employee", () => {
 				document.body.innerHTML = html;
 				expect(screen.getAllByText("Erreur")).toBeTruthy();
 			});
+		});
+	});
+});
+
+// Test for Bills.js
+describe("Given I am connected as Employee and I am on Bill page, there are bills", () => {
+	describe("When clicking on an eye icon", () => {
+		test("Then, modal should open and have a title and a file url", () => {
+			Object.defineProperty(window, "localStorage", { value: localStorageMock });
+			window.localStorage.setItem(
+				"user",
+				JSON.stringify({
+					type: "Employee",
+				})
+			);
+			const html = BillsUI({ data: bills });
+			document.body.innerHTML = html;
+			const onNavigate = (pathname) => {
+				document.body.innerHTML = ROUTES({ pathname });
+			};
+			const store = null;
+			const bill = new Bills({
+				document,
+				onNavigate,
+				store,
+				localStorage: window.localStorage,
+			});
+
+			const modale = document.getElementById("modaleFile");
+			$.fn.modal = jest.fn(() => modale.classList.add("show"));
+
+			const eye = screen.getAllByTestId("icon-eye")[0];
+			const handleClickIconEye = jest.fn(bill.handleClickIconEye(eye));
+
+			eye.addEventListener("click", handleClickIconEye);
+			userEvent.click(eye);
+			expect(handleClickIconEye).toHaveBeenCalled();
+
+			expect(modale.classList).toContain("show");
+
+			expect(screen.getByText("Justificatif")).toBeTruthy();
+			expect(bills[0].fileUrl).toBeTruthy();
+		});
+	});
+});
+describe("Given I am connected as Employee and I am on Bill page, there are a newBill button", () => {
+	describe("When clicking on newBill button", () => {
+		test("Then, bill form should open", () => {
+			Object.defineProperty(window, "localStorage", { value: localStorageMock });
+			window.localStorage.setItem(
+				"user",
+				JSON.stringify({
+					type: "Employee",
+				})
+			);
+			const html = BillsUI({ data: [] });
+			document.body.innerHTML = html;
+			const onNavigate = (pathname) => {
+				document.body.innerHTML = ROUTES({ pathname });
+			};
+			const store = null;
+			const bill = new Bills({
+				document,
+				onNavigate,
+				store,
+				localStorage: window.localStorage,
+			});
+
+			const handleClickNewBill = jest.fn(() => bill.handleClickNewBill());
+			screen.getByTestId("btn-new-bill").addEventListener("click", handleClickNewBill);
+			userEvent.click(screen.getByTestId("btn-new-bill"));
+			expect(handleClickNewBill).toHaveBeenCalled();
+			expect(screen.getByText("Envoyer une note de frais")).toBeTruthy();
 		});
 	});
 });
