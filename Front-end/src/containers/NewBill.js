@@ -18,8 +18,7 @@ export default class NewBill {
 	handleChangeFile = (e) => {
 		e.preventDefault();
 		const file = this.document.querySelector(`input[data-testid="file"]`).files[0];
-		const filePath = e.target.value.split(/\\/g);
-		const fileName = filePath[filePath.length - 1];
+		const fileName = file.name;
 		// new variables needed to check image format
 		const fileInput = this.document.querySelector(`input[data-testid="file"]`);
 		const fileAcceptedFormats = ["jpg", "jpeg", "png"];
@@ -84,13 +83,13 @@ export default class NewBill {
 				})
 				.then(() => {
 					this.updateBill(bill);
-					this.onNavigate(ROUTES_PATH["Bills"]);
 				})
 				.catch((error) => console.error(error));
 		}
 	};
 
 	// not need to cover this function by tests
+	/* istanbul ignore next */
 	updateBill = (bill) => {
 		if (this.store) {
 			this.store
