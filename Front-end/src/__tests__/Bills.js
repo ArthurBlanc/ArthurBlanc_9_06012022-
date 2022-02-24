@@ -1,4 +1,8 @@
-import { screen } from "@testing-library/dom";
+/**
+ * @jest-environment jsdom
+ */
+
+import { screen, waitFor } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import BillsUI from "../views/BillsUI.js";
 import Bills from "../containers/Bills.js";
@@ -6,11 +10,14 @@ import { ROUTES } from "../constants/routes.js";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import store from "../__mocks__/store";
 import { bills } from "../fixtures/bills";
+import { ROUTES_PATH } from "../constants/routes.js";
+
+import router from "../app/Router.js";
 
 describe("Given I am connected as an Employee", () => {
 	// Test for BillsUI.js
-	describe("When I am on Bills page, there are a bill icon in vertical layout", () => {
-		test("Then, the icon should be highlighted", () => {
+	describe("When I am on Bills page, there are a bill icon in vertical layout", async () => {
+		test("Then, the icon should be highlighted", async () => {
 			Object.defineProperty(window, "localStorage", { value: localStorageMock });
 			window.localStorage.setItem(
 				"user",
@@ -18,11 +25,15 @@ describe("Given I am connected as an Employee", () => {
 					type: "Employee",
 				})
 			);
-
-			const html = BillsUI({ data: [] });
-			document.body.innerHTML = html;
-
-			expect(document.querySelector("#layout-icon1").classList.contains("active-icon"));
+			const root = document.createElement("div");
+			root.setAttribute("id", "root");
+			document.body.append(root);
+			router();
+			window.onNavigate(ROUTES_PATH.Bills);
+			await waitFor(() => screen.getByTestId("icon-window"));
+			const windowIcon = screen.getByTestId("icon-window");
+			const isIconActivated = windowIcon.classList.contains("active-icon");
+			expect(isIconActivated).toBeTruthy();
 		});
 		describe("When I am on Bills page, there are a title and a newBill button", () => {
 			test("Then, the title and the button should be render correctly", () => {
@@ -79,8 +90,7 @@ describe("Given I am connected as an Employee", () => {
 		});
 		describe("When I am on Bills page, there are 4 bills", () => {
 			test("Then, bills should be ordered from earliest to latest", () => {
-				const html = BillsUI({ data: bills });
-				document.body.innerHTML = html;
+				document.body.innerHTML = BillsUI({ data: bills });
 
 				const dates = screen.getAllByText(/^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$/i).map((a) => a.innerHTML);
 				const antiChrono = (a, b) => (a < b ? 1 : -1);
