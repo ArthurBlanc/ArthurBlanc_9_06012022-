@@ -6,17 +6,17 @@ import { screen, waitFor } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import BillsUI from "../views/BillsUI.js";
 import Bills from "../containers/Bills.js";
-import { ROUTES } from "../constants/routes.js";
+import { ROUTES, ROUTES_PATH } from "../constants/routes";
 import { localStorageMock } from "../__mocks__/localStorage.js";
-import store from "../__mocks__/store";
+import mockStore from "../__mocks__/store";
 import { bills } from "../fixtures/bills";
-import { ROUTES_PATH } from "../constants/routes.js";
-
 import router from "../app/Router.js";
+
+jest.mock("../app/store", () => mockStore);
 
 describe("Given I am connected as an Employee", () => {
 	// Test for BillsUI.js
-	describe("When I am on Bills page, there are a bill icon in vertical layout", async () => {
+	describe("When I am on Bills page, there are a bill icon in vertical layout", () => {
 		test("Then, the icon should be highlighted", async () => {
 			Object.defineProperty(window, "localStorage", { value: localStorageMock });
 			window.localStorage.setItem(
@@ -37,17 +37,14 @@ describe("Given I am connected as an Employee", () => {
 		});
 		describe("When I am on Bills page, there are a title and a newBill button", () => {
 			test("Then, the title and the button should be render correctly", () => {
-				const html = BillsUI({ data: [] });
-				document.body.innerHTML = html;
-
+				document.body.innerHTML = BillsUI({ data: [] });
 				expect(screen.getAllByText("Mes notes de frais")).toBeTruthy();
 				expect(screen.getByTestId("btn-new-bill")).toBeTruthy();
 			});
 		});
 		describe("When I am on Bills page, there are 4 bills", () => {
 			test("Then, bills data should be render 4 type, name, date, amount, status and eye icon", () => {
-				const html = BillsUI({ data: bills });
-				document.body.innerHTML = html;
+				document.body.innerHTML = BillsUI({ data: bills });
 
 				const bill = screen.getAllByTestId("bill");
 				const type = screen.getAllByTestId("type");
@@ -68,8 +65,7 @@ describe("Given I am connected as an Employee", () => {
 		});
 		describe("When I am on Bills page, there are bills", () => {
 			test("Then, first bill data should contain the right type, name, date, amount, status and eye icon", () => {
-				const html = BillsUI({ data: bills });
-				document.body.innerHTML = html;
+				document.body.innerHTML = BillsUI({ data: bills });
 
 				const bill = screen.getAllByTestId("bill");
 				const type = screen.getAllByTestId("type")[0];
@@ -101,24 +97,20 @@ describe("Given I am connected as an Employee", () => {
 		});
 		describe("When I am on Bills page, and there are no bills", () => {
 			test("Then, no bills should be shown", () => {
-				const html = BillsUI({ data: [] });
-				document.body.innerHTML = html;
-
+				document.body.innerHTML = BillsUI({ data: [] });
 				const bill = screen.queryByTestId("bill");
 				expect(bill).toBeNull();
 			});
 		});
 		describe("When I am on Bills page, but it is loading", () => {
 			test("Then, Loading page should be rendered", () => {
-				const html = BillsUI({ loading: true });
-				document.body.innerHTML = html;
+				document.body.innerHTML = BillsUI({ loading: true });
 				expect(screen.getAllByText("Loading...")).toBeTruthy();
 			});
 		});
 		describe("When I am on Dashboard page but back-end send an error message", () => {
 			test("Then, Error page should be rendered", () => {
-				const html = BillsUI({ error: "some error message" });
-				document.body.innerHTML = html;
+				document.body.innerHTML = BillsUI({ error: "some error message" });
 				expect(screen.getAllByText("Erreur")).toBeTruthy();
 			});
 		});
@@ -136,8 +128,7 @@ describe("Given I am connected as Employee and I am on Bill page, there are bill
 					type: "Employee",
 				})
 			);
-			const html = BillsUI({ data: bills });
-			document.body.innerHTML = html;
+			document.body.innerHTML = BillsUI({ data: bills });
 			const onNavigate = (pathname) => {
 				document.body.innerHTML = ROUTES({ pathname });
 			};
@@ -176,8 +167,7 @@ describe("Given I am connected as Employee and I am on Bill page, there are a ne
 					type: "Employee",
 				})
 			);
-			const html = BillsUI({ data: [] });
-			document.body.innerHTML = html;
+			document.body.innerHTML = BillsUI({ data: [] });
 			const onNavigate = (pathname) => {
 				document.body.innerHTML = ROUTES({ pathname });
 			};
@@ -201,23 +191,53 @@ describe("Given I am connected as Employee and I am on Bill page, there are a ne
 // Test d'intégration GET
 describe("Given I am a user connected as Employee", () => {
 	describe("When I navigate to Bill", () => {
-		test("Then, fetches bills from mock API GET", async () => {
-			const getSpy = jest.spyOn(store, "get");
-			const bills = await store.get();
-			expect(getSpy).toHaveBeenCalledTimes(1);
-			expect(bills.data.length).toBe(4);
+		beforeEach(() => {
+			jest.spyOn(mockStore, "bills");
+			Object.defineProperty(window, "localStorage", { value: localStorageMock });
+			window.localStorage.setItem(
+				"user",
+				JSON.stringify({
+					type: "Employee",
+					email: "a@a",
+				})
+			);
+			const root = document.createElement("div");
+			root.setAttribute("id", "root");
+			document.body.appendChild(root);
+			router();
 		});
+		test("Then, fetches bills from mock API GET", async () => {
+			window.onNavigate(ROUTES_PATH.Bills);
+			expect(screen.getAllByText("Billed")).toBeTruthy();
+			expect(await waitFor(() => screen.getByText("Mes notes de frais"))).toBeTruthy();
+			expect(screen.getByTestId("tbody")).toBeTruthy();
+			expect(screen.getAllByText("test1")).toBeTruthy();
+		});
+
 		test("Then, fetches bills from an API and fails with 404 message error", async () => {
-			store.get.mockImplementationOnce(() => Promise.reject(new Error("Erreur 404")));
-			const html = BillsUI({ error: "Erreur 404" });
-			document.body.innerHTML = html;
+			mockStore.bills.mockImplementationOnce(() => {
+				return {
+					list: () => {
+						return Promise.reject(new Error("Erreur 404"));
+					},
+				};
+			});
+			window.onNavigate(ROUTES_PATH.Bills);
+			await new Promise(process.nextTick);
 			const message = await screen.getByText(/Erreur 404/);
 			expect(message).toBeTruthy();
 		});
+
 		test("Then, fetches messages from an API and fails with 500 message error", async () => {
-			store.get.mockImplementationOnce(() => Promise.reject(new Error("Erreur 500")));
-			const html = BillsUI({ error: "Erreur 500" });
-			document.body.innerHTML = html;
+			mockStore.bills.mockImplementationOnce(() => {
+				return {
+					list: () => {
+						return Promise.reject(new Error("Erreur 500"));
+					},
+				};
+			});
+			window.onNavigate(ROUTES_PATH.Bills);
+			await new Promise(process.nextTick);
 			const message = await screen.getByText(/Erreur 500/);
 			expect(message).toBeTruthy();
 		});
