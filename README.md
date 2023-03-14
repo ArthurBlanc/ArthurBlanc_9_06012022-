@@ -24,13 +24,13 @@ Développeur front-end dans une entreprise qui produit des solutions SaaS destin
 
 Une équipe travaille actuellement sur une fonction pour la gestion des notes de frais. Un développeur ayant quitté l’équipe en charge du projet, j’ai été désigné en tant que remplaçant afin de pouvoir tenir les délais. Cette fonctionnalité doit être prête pour son déploiement imminent.
 
-Mon rôle a été de debuggez les parcours “Employé” et “Administrateur” de l’application, d’écrire des tests unitaires et d’intégration à l’aide de “Jest” et de rédiger un plan de test End-to-End pour le parcours “Employé”.
+Mon rôle a été de debuggez les parcours “Employé” et “Administrateur” de l’application, d’écrire des tests unitaires et d’intégration à l’aide de “Jest” et de rédiger un [plan de test End-to-End](/ressources/plan_E2E_parcours_employe.pdf) pour le parcours “Employé”.
 
 ### Todo-list : ([Notion](https://www.notion.so/a7a612fc166747e78d95aa38106a55ec?v=2a8d3553379c4366b6f66490ab8f0b90))
 
 -   Débugger l'application
 -   Ecrire des tests unitaires et d'intégration pour les fichiers views/Bills.js, container/Bills et container/NewBill.js
--   Ecrire un plan de test end-to-end pour le parcours "Employé"
+-   Ecrire un plan de [plan de test End-to-End](/ressources/plan_E2E_parcours_employe.pdf) pour le parcours "Employé"
 
 ## Installation :
 
@@ -98,13 +98,13 @@ As a front-end developer at a company that produces SaaS solutions for HR teams.
 
 I was appointed as a replacement for a developer who had left the team in charge of the expense report management feature. This functionality needs to be ready for imminent deployment.
 
-I was tasked with debugging the "Employee" and "Administrator" workflows of the application, writing unit and integration tests using "Jest," and drafting an end-to-end test plan for the "Employee" workflow.
+I was tasked with debugging the "Employee" and "Administrator" workflows of the application, writing unit and integration tests using "Jest," and drafting an [end-to-end test plan (in French)](/ressources/plan_E2E_parcours_employe.pdf) for the "Employee" workflow.
 
 ### Todo-list: ([Notion](https://www.notion.so/a7a612fc166747e78d95aa38106a55ec?v=2a8d3553379c4366b6f66490ab8f0b90))
 
 -   Debug the application
 -   Write unit and integration tests for the views/Bills.js, container/Bills, and container/NewBill.js files
--   Write an end-to-end test plan for the "Employee" workflow
+-   Write an [end-to-end test plan (in French)](/ressources/plan_E2E_parcours_employe.pdf) for the "Employee" workflow
 
 ## Installation:
 
